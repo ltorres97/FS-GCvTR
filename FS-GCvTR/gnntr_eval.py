@@ -177,8 +177,18 @@ class GNNCvTR_eval(nn.Module):
         
  
     def update_graph_params(self, loss, lr_update):
-        grads = torch.autograd.grad(loss, self.gnn.parameters())
-        return parameters_to_vector(grads), parameters_to_vector(self.gnn.parameters()) - parameters_to_vector(grads) * lr_update
+        
+        grads = torch.autograd.grad(loss, self.gnn.parameters(), retain_graph=True, allow_unused=True)
+        used_grads = [grad for grad in grads if grad is not None]
+        
+        return parameters_to_vector(used_grads), parameters_to_vector(self.gnn.parameters()) - parameters_to_vector(used_grads) * lr_update
+    
+    def update_tr_params(self, loss, lr_update):
+       
+        grads_tr = torch.autograd.grad(loss, self.transformer.parameters())
+        used_grads_tr = [grad for grad in grads_tr if grad is not None]
+        
+        return parameters_to_vector(used_grads_tr), parameters_to_vector(self.transformer.parameters()) - parameters_to_vector(used_grads_tr) * lr_update
 
     def meta_evaluate(self):
         
@@ -186,6 +196,9 @@ class GNNCvTR_eval(nn.Module):
 
         t=0
         graph_params = parameters_to_vector(self.gnn.parameters())
+        if self.baseline == 0:
+            tr_params = parameters_to_vector(self.transformer.parameters())
+        
         device = torch.device("cuda:" + str(self.device)) if torch.cuda.is_available() else torch.device("cpu")
         
         for test_task in range(self.test_tasks):
@@ -212,18 +225,18 @@ class GNNCvTR_eval(nn.Module):
                     
                     if self.baseline == 0:
                         
-                        with torch.no_grad():
-                            val_logit, emb = self.transformer(self.gnn.pool(emb, batch.batch))
-                        
+                        val_logit, emb = self.transformer(self.gnn.pool(emb, batch.batch))
                         loss_tr = self.loss_transformer(F.sigmoid(val_logit).double(), y.to(torch.float64))
                         loss_logits += torch.sum(loss_tr)/val_logit.size(dim=0)
-                          
-                    del graph_pred, emb
+
                     
                 updated_grad, updated_params = self.update_graph_params(graph_loss, lr_update = self.lr_update)
                 vector_to_parameters(updated_params, self.gnn.parameters())
-            
-            torch.cuda.empty_cache()
+
+                if self.baseline == 0:
+                    updated_grad_tr, updated_tr_params = self.update_tr_params(loss_logits, lr_update = self.lr_update)
+                    vector_to_parameters(updated_tr_params, self.transformer.parameters())
+                
             
             nodes=[]
             labels=[]
@@ -261,6 +274,8 @@ class GNNCvTR_eval(nn.Module):
             roc_scores  = roc_accuracy(roc_scores, y_label, y_pred)
             
             vector_to_parameters(graph_params, self.gnn.parameters())
+            if self.baseline == 0:
+                vector_to_parameters(tr_params, self.transformer.parameters())
                 
         return roc_scores, self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_optimizer.state_dict()
         #return [statistics.mean(roc_scores)], self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_optimizer.state_dict()    
