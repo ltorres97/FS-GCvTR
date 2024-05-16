@@ -150,13 +150,13 @@ class GNNCvTR_eval(nn.Module):
         self.k_train = 5
         self.k_test = 10
         self.device = 0
-        self.loss = nn.BCEWithLogitsLoss()
         self.gnn = GNN_prediction(self.graph_layers, self.emb_size, jk = "last", dropout_prob = 0.5, pooling = "mean", gnn_type = gnn)
         self.transformer = ConvTR() 
         self.gnn.from_pretrained(pretrained)
-        self.pos_weight = torch.FloatTensor([1]).to(self.device) #Tox21: 25; SIDER: 1
+        self.pos_weight = torch.FloatTensor([25]).to(self.device) #Tox21: 25; SIDER: 1
+        self.loss = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
         self.loss_transformer = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
-        self.meta_optimizer = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
+        self.meta_opt = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
         
         graph_params = []
         graph_params.append({"params": self.gnn.gnn.parameters()})
@@ -164,6 +164,7 @@ class GNNCvTR_eval(nn.Module):
         
         self.optimizer = optim.Adam(graph_params, lr=self.learning_rate, weight_decay=0) 
         self.gnn.to(torch.device("cuda:0"))
+        self.transformer.to(torch.device("cuda:0"))
         
         if (self.baseline == 0):
             self.ckp_path_gnn = "checkpoints/checkpoints-GT/FS-GNNCvTR_GNN_sider_5.pt"
