@@ -156,7 +156,7 @@ class GNNCvTR_eval(nn.Module):
         self.pos_weight = torch.FloatTensor([25]).to(self.device) #Tox21: 25; SIDER: 1
         self.loss = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
         self.loss_transformer = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
-        self.meta_opt = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
+        self.meta_optimizer = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
         
         graph_params = []
         graph_params.append({"params": self.gnn.gnn.parameters()})
