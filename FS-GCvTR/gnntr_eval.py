@@ -156,7 +156,7 @@ class GNNCvTR_eval(nn.Module):
         self.pos_weight = torch.FloatTensor([25]).to(self.device) #Tox21: 25; SIDER: 1
         self.loss = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
         self.loss_transformer = nn.BCEWithLogitsLoss(pos_weight=self.pos_weight)
-        self.meta_optimizer = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
+        self.meta_opt = torch.optim.Adam(self.transformer.parameters(), lr=1e-5)
         
         graph_params = []
         graph_params.append({"params": self.gnn.gnn.parameters()})
@@ -173,7 +173,7 @@ class GNNCvTR_eval(nn.Module):
             self.ckp_path_gnn = "checkpoints/checkpoints-baselines/GIN/checkpoint_GIN_gnn_tox21_05.pt"
         
         self.gnn, self.optimizer, start_epoch = load_ckp(self.ckp_path_gnn, self.gnn, self.optimizer)
-        self.transformer, self.meta_optimizer, start_epoch = load_ckp(self.ckp_path_transformer, self.transformer, self.meta_optimizer)
+        self.transformer, self.meta_opt, start_epoch = load_ckp(self.ckp_path_transformer, self.transformer, self.meta_opt)
         
  
     def update_graph_params(self, loss, lr_update):
@@ -277,5 +277,5 @@ class GNNCvTR_eval(nn.Module):
             if self.baseline == 0:
                 vector_to_parameters(tr_params, self.transformer.parameters())
                 
-        return roc_scores, self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_optimizer.state_dict()
-        #return [statistics.mean(roc_scores)], self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_optimizer.state_dict()    
+        return roc_scores, self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_opt.state_dict()
+        #return [statistics.mean(roc_scores)], self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_opt.state_dict()    
