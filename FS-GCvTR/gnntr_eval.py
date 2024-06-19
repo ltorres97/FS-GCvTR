@@ -162,7 +162,7 @@ class GNNCvTR_eval(nn.Module):
         graph_params.append({"params": self.gnn.gnn.parameters()})
         graph_params.append({"params": self.gnn.graph_pred_linear.parameters(), "lr":self.learning_rate})
         
-        self.optimizer = optim.Adam(graph_params, lr=self.learning_rate, weight_decay=0) 
+        self.opt = optim.Adam(graph_params, lr=self.learning_rate, weight_decay=0) 
         self.gnn.to(torch.device("cuda:0"))
         self.transformer.to(torch.device("cuda:0"))
         
@@ -172,7 +172,7 @@ class GNNCvTR_eval(nn.Module):
         elif (self.baseline == 1):
             self.ckp_path_gnn = "checkpoints/checkpoints-baselines/GIN/checkpoint_GIN_gnn_tox21_05.pt"
         
-        self.gnn, self.optimizer, start_epoch = load_ckp(self.ckp_path_gnn, self.gnn, self.optimizer)
+        self.gnn, self.opt, start_epoch = load_ckp(self.ckp_path_gnn, self.gnn, self.opt)
         self.transformer, self.meta_opt, start_epoch = load_ckp(self.ckp_path_transformer, self.transformer, self.meta_opt)
         
  
@@ -277,5 +277,5 @@ class GNNCvTR_eval(nn.Module):
             if self.baseline == 0:
                 vector_to_parameters(tr_params, self.transformer.parameters())
                 
-        return roc_scores, self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_opt.state_dict()
-        #return [statistics.mean(roc_scores)], self.gnn.state_dict(), self.transformer.state_dict(), self.optimizer.state_dict(), self.meta_opt.state_dict()    
+        return roc_scores, self.gnn.state_dict(), self.transformer.state_dict(), self.opt.state_dict(), self.meta_opt.state_dict()
+        #return [statistics.mean(roc_scores)], self.gnn.state_dict(), self.transformer.state_dict(), self.opt.state_dict(), self.meta_opt.state_dict()    
