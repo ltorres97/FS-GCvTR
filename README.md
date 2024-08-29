@@ -22,7 +22,7 @@ The Tox21 and SIDER datasets are downloaded from [Data](http://snap.stanford.edu
 
 Data is pre-processed and transformed into molecular graphs using RDKit.Chem. 
 
-Data pre-processing and pre-trained models are implemented based on [Strategies for Pre-training Graph Neural Networks (Hu et al.) (2020)](https://arxiv.org/abs/1905.12265).
+The implementation is based on [Strategies for Pre-training Graph Neural Networks (Hu et al.) (2020)](https://arxiv.org/abs/1905.12265).
 
 ## Python Packages
 
