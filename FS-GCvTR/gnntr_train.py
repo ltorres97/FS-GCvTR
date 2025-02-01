@@ -200,7 +200,7 @@ class GNNCvTR(nn.Module):
         #self.gnn, self.opt, start_epoch = load_ckp(self.ckp_path_gnn, self.gnn, self.opt)
         #self.transformer, self.meta_opt, start_epoch = load_ckp(self.ckp_path_transformer, self.transformer, self.meta_opt)
     
-     def update_graph_params(self, loss, lr_update):
+    def update_graph_params(self, loss, lr_update):
         
         grads = torch.autograd.grad(loss, self.gnn.parameters(), retain_graph=True, allow_unused=True)
         used_grads = [grad for grad in grads if grad is not None]
